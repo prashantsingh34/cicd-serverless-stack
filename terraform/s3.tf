@@ -61,6 +61,7 @@ resource "aws_cloudwatch_event_rule" "s3_object_created" {
       }
     }
   })
+  depends_on=[aws_cloudwatch_event_bus.file_transfer_event_bus.id]
 }
 
 resource "aws_cloudwatch_event_target" "start_step_function" {
