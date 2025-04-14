@@ -66,9 +66,11 @@ resource "aws_cloudwatch_event_rule" "s3_object_created" {
 
 resource "aws_cloudwatch_event_target" "start_step_function" {
   rule      = aws_cloudwatch_event_rule.s3_object_created.name
+  event_bus_name = aws_cloudwatch_event_bus.file_transfer_event_bus.name
   target_id = "StartStepFunction"
   arn       = aws_sfn_state_machine.s3_event_triggered.arn
   role_arn  = aws_iam_role.eventbridge_invoke_stepfn_role.arn
+  depends_on=[aws_cloudwatch_event_bus.file_transfer_event_bus]
 }
 
 ## processed bucket
