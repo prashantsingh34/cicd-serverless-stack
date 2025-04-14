@@ -62,6 +62,25 @@ resource "aws_iam_role_policy" "generate_presigned_url_lambda_s3_access" {
   })
 }
 
+resource "aws_iam_role_policy" "generate_presigned_url_lambda_s3_access" {
+  name = "generate-presigned-url-lambda-dynamo-put"
+  role = aws_iam_role.generate_presigned_url_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+         "dynamodb:PutItem"
+        ],
+        Resource = [
+          aws_dynamodb_table.image_upload_jobs.arn
+        ]
+      }
+    ]
+  })
+}
 
 
 

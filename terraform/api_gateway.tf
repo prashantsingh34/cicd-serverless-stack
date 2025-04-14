@@ -73,7 +73,7 @@ resource "aws_api_gateway_deployment" "my_deployment" {
   ]
 }
 
-# ✅ Stage
+
 resource "aws_api_gateway_stage" "my_stage" {
   stage_name    = "prod"
   rest_api_id   = aws_api_gateway_rest_api.process_file_api_gateway.id
