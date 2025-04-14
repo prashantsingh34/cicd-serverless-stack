@@ -29,7 +29,7 @@ resource "aws_api_gateway_integration" "presigned_url_resource_get_integration" 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.generate_presigned_url_lambda.invoke_arn
-  credentials             = aws_iam_role.generate_presigned_url_role.arn
+  credentials             = aws_iam_role.presigned_url_role.arn
   depends_on              = [aws_api_gateway_method.presigned_url_resource_get_method]
 }
 
