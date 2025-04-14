@@ -62,3 +62,41 @@ resource "aws_iam_role_policy" "generate_presigned_url_lambda_s3_access" {
   })
 }
 
+
+
+
+resource "aws_iam_role" "presigned_url_role" {
+  name = "presigned_url_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Effect = "Allow",
+      Principal = {
+        Service = "apigateway.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_policy" "presigned_url_api_invocation_policy" {
+  name = "presigned-url-api-invocation-policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "lambda:InvokeFunction"
+        Resource = [
+          aws_lambda_function.generate_presigned_url_lambda.arn
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_policy_to_presigned_url_role" {
+  role       = aws_iam_role.presigned_url_role.name
+  policy_arn = aws_iam_policy.presigned_url_api_invocation_policy.arn
+}
+
