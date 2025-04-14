@@ -36,7 +36,39 @@ resource "aws_s3_bucket_public_access_block" "file_to_be_processed_public_access
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_notification" "eventbridge_enable" {
+  bucket = aws_s3_bucket.file_to_be_processed.id
+  eventbridge = true
+}
 
+resource "aws_cloudwatch_event_bus" "file_transfer_event_bus" {
+  name = "file-process-event-bus"
+}
+
+resource "aws_cloudwatch_event_rule" "s3_object_created" {
+  name        = "s3-object-created-event"
+  event_bus_name = aws_cloudwatch_event_bus.file_transfer_event_bus.name
+  description = "Trigger Step Function on S3 object upload"
+  event_pattern = jsonencode({
+    "source": ["aws.s3"],
+    "detail-type": ["Object Created"],
+    "detail": {
+      "bucket": {
+        "name": [aws_s3_bucket.file_to_be_processed.bucket]
+      },
+      "object": {
+        "key": [{ "prefix": "uploads/" }]
+      }
+    }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "start_step_function" {
+  rule      = aws_cloudwatch_event_rule.s3_object_created.name
+  target_id = "StartStepFunction"
+  arn       = aws_sfn_state_machine.s3_event_triggered.arn
+  role_arn  = aws_iam_role.eventbridge_invoke_stepfn_role.arn
+}
 
 ## processed bucket
 

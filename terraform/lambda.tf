@@ -25,6 +25,36 @@ data "archive_file" "presigned_url_zip" {
   output_path = "/tmp/presigned_url.zip"
 }
 
+resource "aws_lambda_function" "extract_s3_object_metadata_lambda" {
+
+  function_name    = "extract_s3_object_metadata"
+  role             = aws_iam_role.generate_presigned_url_lambda_role.arn
+  handler          = "extract_s3_object_metadata.lambda_handler"
+  runtime          = "python3.11"
+  timeout          = 30
+  memory_size      = 128
+  layers           = [aws_lambda_layer_version.python_deps_layer.arn]
+  filename         = data.archive_file.extract_s3_object_metadata_zip.output_path
+  source_code_hash = data.archive_file.extract_s3_object_metadata_zip.output_base64sha256
+  environment {
+    variables = {
+      SOURCE_BUCKET = aws_s3_bucket.file_to_be_processed.bucket
+    }
+  }
+
+
+}
+
+data "archive_file" "extract_s3_object_metadata_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../lambda/extract_s3_object_metadata.py"
+  output_path = "/tmp/extract_s3_object_metadata.zip"
+}
+
+
+
+
+
 resource "aws_lambda_layer_version" "python_deps_layer" {
   filename            = "layer.zip"
   layer_name          = "dependency_layer"

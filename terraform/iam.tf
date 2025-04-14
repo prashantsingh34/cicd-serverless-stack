@@ -120,3 +120,49 @@ resource "aws_iam_role_policy_attachment" "attach_policy_to_presigned_url_role" 
   policy_arn = aws_iam_policy.presigned_url_api_invocation_policy.arn
 }
 
+
+
+resource "aws_iam_role" "eventbridge_invoke_stepfn_role" {
+  name = "eventbridge-start-stepfn-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "events.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
+  })
+
+  inline_policy {
+    name = "allow-start-execution"
+    policy = jsonencode({
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = "states:StartExecution",
+          Resource = aws_sfn_state_machine.s3_event_triggered.arn
+        }
+      ]
+    })
+  }
+}
+
+
+resource "aws_iam_role" "step_fn_exec_role" {
+  name = "step_fn_s3_event_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "states.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
