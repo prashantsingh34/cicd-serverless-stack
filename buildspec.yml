@@ -9,7 +9,6 @@ phases:
       - yum install -y unzip
       - echo "Downloading Terraform..."
       - curl -LO https://releases.hashicorp.com/terraform/1.11.4/terraform_1.11.4_linux_amd64.zip
-      - echo "File downloaded: terraform_1.11.4_linux_amd64.zip"
       - ls -al terraform_1.11.4_linux_amd64.zip  # List the downloaded file to ensure it exists
       - echo "Checking Terraform zip integrity..."
       - unzip -t terraform_1.11.4_linux_amd64.zip  # Test the zip file integrity before extracting
