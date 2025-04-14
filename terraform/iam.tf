@@ -13,7 +13,6 @@ resource "aws_iam_role" "generate_presigned_url_lambda_role" {
     }]
   })
 
-  tags = module.tags.tags
 
 }
 
