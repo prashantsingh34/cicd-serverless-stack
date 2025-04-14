@@ -9,10 +9,14 @@ phases:
       - yum install -y unzip
       - echo "Downloading Terraform..."
       - curl -LO https://releases.hashicorp.com/terraform/1.11.4/terraform_1.11.4_linux_amd64.zip
+      - echo "File downloaded: terraform_1.11.4_linux_amd64.zip"
       - ls -al terraform_1.11.4_linux_amd64.zip  # List the downloaded file to ensure it exists
-      - echo "Unzipping Terraform..."
-      - unzip terraform_1.11.4_linux_amd64.zip
-      - mv terraform /usr/local/bin/
+      - echo "Checking Terraform zip integrity..."
+      - unzip -t terraform_1.11.4_linux_amd64.zip  # Test the zip file integrity before extracting
+      - echo "Unzipping Terraform into a separate directory..."
+      - mkdir terraform_bin  # Create a new directory to avoid conflicts with the terraform code directory
+      - unzip terraform_1.11.4_linux_amd64.zip -d terraform_bin  # Extract into the new directory
+      - mv terraform_bin/terraform /usr/local/bin/  # Move the extracted terraform binary to /usr/local/bin/
       - terraform -version
       - echo "Installing Python dependencies..."
       - pip install -r requirements.txt -t python
@@ -26,7 +30,7 @@ phases:
   build:
     commands:
       - echo "Initializing Terraform..."
-      - cd terraform
+      - cd terraform  # This is our existing directory with Terraform code
       - terraform init
       - terraform plan
       - terraform apply -auto-approve
