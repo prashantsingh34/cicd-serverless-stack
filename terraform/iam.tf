@@ -135,22 +135,27 @@ resource "aws_iam_role" "eventbridge_invoke_stepfn_role" {
       Action = "sts:AssumeRole"
     }]
   })
-
-  inline_policy {
-    name = "allow-start-execution"
-    policy = jsonencode({
-      Version = "2012-10-17",
-      Statement = [
-        {
-          Effect = "Allow",
-          Action = "states:StartExecution",
-          Resource = aws_sfn_state_machine.s3_event_triggered.arn
-        }
-      ]
-    })
-  }
 }
 
+resource "aws_iam_role_policy" "eventbridge_invoke_stepfn_role_policy" {
+  name = "eventbridge-start-stepfn-role-policy"
+  role = aws_iam_role.generate_presigned_url_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+         "states:StartExecution"
+        ],
+        Resource = [
+          aws_sfn_state_machine.s3_event_triggered.arn
+        ]
+      }
+    ]
+  })
+}
 
 resource "aws_iam_role" "step_fn_exec_role" {
   name = "step_fn_s3_event_role"
