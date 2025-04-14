@@ -9,7 +9,7 @@ resource "aws_lambda_function" "generate_presigned_url_lambda" {
   layers           = [aws_lambda_layer_version.python_deps_layer.arn]
   filename         = data.archive_file.presigned_url_zip.output_path
   source_code_hash = data.archive_file.presigned_url_zip.output_base64sha256
-  SOURCE_BUCKET    = aws_s3_bucket.file_to_be_processed.bucket,
+  SOURCE_BUCKET    = aws_s3_bucket.file_to_be_processed.bucket
 
 }
 

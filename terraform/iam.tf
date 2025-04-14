@@ -41,31 +41,6 @@ resource "aws_iam_role_policy" "generate_presigned_url_lambda_cloudwatch_logs" {
   })
 }
 
-
-resource "aws_iam_role_policy" "generate_presigned_url_lambda_cloudwatch_logs" {
-  name = "generate-presigned-url-lambda-cloudwatch-logs"
-  role = aws_iam_role.generate_presigned_url_lambda_role.id
-
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        "Resource" : "arn:aws:logs:*:*:log-group:*:log-stream:*"
-      },
-      {
-        "Effect" : "Allow",
-        "Action" : "logs:CreateLogGroup",
-        "Resource" : "arn:aws:logs:*:*:log-group:*"
-      }
-    ]
-  })
-}
-
 resource "aws_iam_role_policy" "generate_presigned_url_lambda_s3_access" {
   name = "generate-presigned-url-lambda-s3-access"
   role = aws_iam_role.generate_presigned_url_lambda_role.id
