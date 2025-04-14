@@ -2,8 +2,6 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      python: 3.11
     commands:
       - echo "Installing unzip..."
       - yum install -y unzip
@@ -13,7 +11,7 @@ phases:
       - echo "Unzipping Terraform into a separate directory..."
       - mkdir terraform_bin  # Create a new directory to avoid conflicts with the terraform code directory
       - unzip terraform_1.11.4_linux_amd64.zip -d terraform_bin  # Extract into the new directory
-      - mv terraform_bin/terraform /usr/local/bin/  # Move the extracted terraform binary to /usr/local/bin/
+      - cp terraform_bin/terraform /usr/local/bin/  # Move the extracted terraform binary to /usr/local/bin/
       - terraform -version
       - echo "Installing Python dependencies..."
       - pip install -r requirements.txt -t python
