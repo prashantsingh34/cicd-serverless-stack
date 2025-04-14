@@ -11,7 +11,8 @@ resource "aws_lambda_function" "generate_presigned_url_lambda" {
   source_code_hash = data.archive_file.presigned_url_zip.output_base64sha256
   environment {
     variables = {
-      SOURCE_BUCKET    = aws_s3_bucket.file_to_be_processed.bucket
+      SOURCE_BUCKET = aws_s3_bucket.file_to_be_processed.bucket
+      TABLE_NAME    = aws_dynamodb_table.image_upload_jobs.name
     }
   }
 
