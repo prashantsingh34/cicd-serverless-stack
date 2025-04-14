@@ -7,8 +7,10 @@ phases:
     commands:
       - echo "Installing unzip..."
       - yum install -y unzip
-      - echo "Installing Terraform..."
+      - echo "Downloading Terraform..."
       - curl -LO https://releases.hashicorp.com/terraform/1.11.4/terraform_1.11.4_linux_amd64.zip
+      - ls -al terraform_1.11.4_linux_amd64.zip  # List the downloaded file to ensure it exists
+      - echo "Unzipping Terraform..."
       - unzip terraform_1.11.4_linux_amd64.zip
       - mv terraform /usr/local/bin/
       - terraform -version
