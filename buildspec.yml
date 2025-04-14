@@ -5,25 +5,19 @@ phases:
     runtime-versions:
       python: 3.11
     commands:
-      - echo "Installing dependencies..."
-      - pip install -r requirements.txt -t python
-  pre_build:
-    commands:
-phases:
-  install:
-    runtime-versions:
-      python: 3.11
-    commands:
       - echo "Installing Terraform..."
       - curl -LO https://releases.hashicorp.com/terraform/1.11.4/terraform_1.11.4_linux_amd64.zip
       - unzip terraform_1.11.4_linux_amd64.zip
       - mv terraform /usr/local/bin/
       - terraform -version
+      - echo "Installing Python dependencies..."
       - pip install -r requirements.txt -t python
+
+  pre_build:
+    commands:
       - echo "Zipping dependencies into layer.zip..."
       - zip -q -r terraform/layer.zip python
       - rm -rf python  # Clean up to avoid clutter
-
 
   build:
     commands:
