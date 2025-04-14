@@ -56,3 +56,26 @@ resource "aws_api_gateway_integration_response" "presigned_url_resource_integrat
 
 
 
+resource "aws_api_gateway_deployment" "my_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.process_file_api_gateway.id
+
+  triggers = {
+    # Force redeployment when API config changes
+    redeploy = sha1(jsonencode({
+      resource   = aws_api_gateway_resource.presigned_url_resource.id
+      method     = aws_api_gateway_method.presigned_url_resource_get_method.id
+      integration = aws_api_gateway_integration.presigned_url_resource_get_integration.id
+    }))
+  }
+
+  depends_on = [
+    aws_api_gateway_integration.presigned_url_resource_get_integration
+  ]
+}
+
+# ✅ Stage
+resource "aws_api_gateway_stage" "my_stage" {
+  stage_name    = "prod"
+  rest_api_id   = aws_api_gateway_rest_api.process_file_api_gateway.id
+  deployment_id = aws_api_gateway_deployment.my_deployment.id
+}
