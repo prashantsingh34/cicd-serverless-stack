@@ -63,6 +63,33 @@ resource "aws_iam_role_policy" "generate_presigned_url_lambda_s3_access" {
   })
 }
 
+
+
+resource "aws_iam_role_policy" "rekognition_s3_policy" {
+  name        = "RekognitionS3AccessPolicy"
+  role = aws_iam_role.generate_presigned_url_lambda_role.id
+
+  # Define the policy in JSON format
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "rekognition:DetectText",
+          "rekognition:DetectLabels",
+          "rekognition:DetectModerationLabels",
+          "rekognition:IndexFaces",
+          "rekognition:SearchFaces",
+          "rekognition:CompareFaces"
+        ],
+        "Resource" : "*"
+      }
+    ]
+  })
+}
+
+
 resource "aws_iam_role_policy" "generate_presigned_url_lambda_dynamo_put_item" {
   name = "generate-presigned-url-lambda-dynamo-put"
   role = aws_iam_role.generate_presigned_url_lambda_role.id
