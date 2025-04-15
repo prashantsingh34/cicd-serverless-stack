@@ -46,7 +46,7 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
     "Check Status Code": {
       "Choices": [
         {
-          "Next": "UpdateItem file trsansfer failed",
+          "Next": "UpdateItem file transfer failed",
           "Not": {
             "Variable": "$.statusCode",
             "NumericEquals": 200
@@ -129,7 +129,7 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
       "Resource": "arn:aws:states:::dynamodb:updateItem",
       "Type": "Task"
     },
-    "UpdateItem file trsansfer failed": {
+    "UpdateItem file transfer failed": {
       "End": true,
       "Parameters": {
         "ExpressionAttributeValues": {
