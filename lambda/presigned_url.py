@@ -19,7 +19,7 @@ TABLE_NAME = os.environ.get('TABLE_NAME')
 
 def lambda_handler(event, context):
     job_id = str(uuid.uuid4())
-    key = f"uploads/{job_id}.jpg"
+    key = f"uploads/{job_id}.png"
 
 
     presigned_url = s3.generate_presigned_url(
@@ -37,7 +37,7 @@ def lambda_handler(event, context):
     table = dynamodb.Table(TABLE_NAME)
     table.put_item(Item={
         'job_id': job_id,
-        'status': 'upload_pending',
+        'job_status': 'upload_pending',
         'uploaded_at': datetime.utcnow().isoformat(),
         'image_key': key
     })

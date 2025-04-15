@@ -11,64 +11,19 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
         {
           "Next": "UpdateItem incorrect extension",
           "Not": {
-            "Variable": "$.body.file_extension",
-            "StringEquals": ".png"
+            "StringEquals": ".png",
+            "Variable": "$.body.file_extension"
           }
         }
       ],
-      "Default": "Check file size",
+      "Default": "Modify File and upload to s3",
       "Type": "Choice"
     },
-    "Check file size": {
-      "Choices": [
-        {
-          "Next": "Modify File and upload to s3",
-          "Variable": "$.body.file_size",
-          "NumericGreaterThan": 50
-        }
-      ],
-      "Default": "CopyObject-> No modification reqd",
-      "Type": "Choice"
-    },
-    "Check statusCode": {
-      "Choices": [
-        {
-          "Next": "UpdateItem file trsansfer failed",
-          "Not": {
-            "NumericEquals": 200,
-            "Variable": "$.modifyFile.statusCode"
-          }
-        }
-      ],
-      "Default": "UpdateItem File transfer successfull",
-      "Type": "Choice"
-    },
-    "Choice": {
-      "Choices": [
-        {
-          "Next": "UpdateItem file trsanfer failed",
-          "NumericEquals": 500,
-          "Variable": "$.statusCode"
-        }
-      ],
-      "Default": "Check File type",
-      "Type": "Choice"
-    },
-    "CopyObject-> No modification reqd": {
-      "Next": "UpdateItem File transfer successfull",
-      "Parameters": {
-        "Bucket": "MyData",
-        "CopySource": "MyData",
-        "Key": "MyData"
-      },
-      "Resource": "arn:aws:states:::aws-sdk:s3:copyObject",
-      "Type": "Task"
-    },
-    "Get File metadata": {
-      "Next": "Choice",
+    "Modify File and upload to s3": {
+      "Next": "Check Status Code",
       "OutputPath": "$.Payload",
       "Parameters": {
-        "FunctionName": aws_lambda_function.extract_s3_object_metadata_lambda.arn,
+        "FunctionName": aws_lambda_function.generate_image_to_text_lambda.arn,
         "Payload.$": "$"
       },
       "Resource": "arn:aws:states:::lambda:invoke",
@@ -88,8 +43,32 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
       ],
       "Type": "Task"
     },
-    "Modify File and upload to s3": {
-      "Next": "Check statusCode",
+    "Check Status Code": {
+      "Choices": [
+        {
+          "Next": "UpdateItem file trsansfer failed",
+          "Not": {
+            "Variable": "$.statusCode",
+            "NumericEquals": 200
+          }
+        }
+      ],
+      "Default": "UpdateItem File transfer successfull",
+      "Type": "Choice"
+    },
+    "Choice": {
+      "Choices": [
+        {
+          "Next": "UpdateItem file trsanfer failed",
+          "NumericEquals": 500,
+          "Variable": "$.statusCode"
+        }
+      ],
+      "Default": "Check File type",
+      "Type": "Choice"
+    },
+    "Get File metadata": {
+      "Next": "Choice",
       "OutputPath": "$.Payload",
       "Parameters": {
         "FunctionName": aws_lambda_function.modify_file_size_lambda.arn
@@ -160,7 +139,7 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
         },
         "Key": {
           "job_id": {
-            "S.$": "$.body.file_name"
+            "S.$": "$.file_name"
           }
         },
         "TableName": aws_dynamodb_table.image_upload_jobs.name,

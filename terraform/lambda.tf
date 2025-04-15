@@ -57,24 +57,24 @@ resource "aws_lambda_function" "extract_s3_object_metadata_lambda" {
 
 
 
-data "archive_file" "modify_file_size_zip" {
+data "archive_file" "generate_image_to_text_zip" {
   type        = "zip"
-  source_file = "${path.module}/../lambda/modify_file_size.py"
-  output_path = "/tmp/modify_file_size.zip"
+  source_file = "${path.module}/../lambda/generate_image_to_text.py"
+  output_path = "/tmp/generate_image_to_text.zip"
 }
 
 
-resource "aws_lambda_function" "modify_file_size_lambda" {
+resource "aws_lambda_function" "generate_image_to_text_lambda" {
 
-  function_name    = "modify_file_size"
+  function_name    = "generate_image_to_text"
   role             = aws_iam_role.generate_presigned_url_lambda_role.arn
-  handler          = "modify_file_size.lambda_handler"
+  handler          = "generate_image_to_text.lambda_handler"
   runtime          = "python3.11"
   timeout          = 30
   memory_size      = 128
   layers           = [aws_lambda_layer_version.python_deps_layer.arn]
-  filename         = data.archive_file.modify_file_size_zip.output_path
-  source_code_hash = data.archive_file.modify_file_size_zip.output_base64sha256
+  filename         = data.archive_file.generate_image_to_text_zip.output_path
+  source_code_hash = data.archive_file.generate_image_to_text_zip.output_base64sha256
   environment {
     variables = {
       SOURCE_BUCKET = aws_s3_bucket.file_to_be_processed.bucket,

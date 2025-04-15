@@ -9,9 +9,11 @@ source_bucket = os.environ['SOURCE_BUCKET']
 dest_bucket = os.environ['DEST_BUCKET']
 
 def lambda_handler(event, context):
+    object_key = f"{event.get('body').get('file_name')}{event.get('body').get('file_extension')}"
+    file_name=f"{event.get('body').get('file_name').split('/')[1]}"
     try:
         # Get the source bucket, object key, and file extension from the event
-        object_key = f"{event['body']['file_name']}{event['body']['file_extension']}"
+        
         
         # Fetch the object from the source bucket
         response = s3_client.get_object(Bucket=source_bucket, Key=object_key)
@@ -32,7 +34,7 @@ def lambda_handler(event, context):
         print("Detected text:", detected_text)
 
         # Create a text file with the detected text to upload to the destination bucket
-        text_file_key = f"{event['body']['file_name']}_ocr.txt"
+        text_file_key = f"OCR/{file_name}_ocr.txt"
         s3_client.put_object(
             Bucket=dest_bucket,
             Key=text_file_key,
@@ -42,11 +44,10 @@ def lambda_handler(event, context):
 
         return {
             'statusCode': 200,
-            'body': json.dumps({
+            'body': {
                 'message': 'OCR text extracted and uploaded successfully.',
-                'destination_bucket': dest_bucket,
-                'ocr_text_key': text_file_key
-            })
+                'file_name': file_name
+            }
         }
     
     except Exception as e:
@@ -55,5 +56,6 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': json.dumps({
                 'error': str(e)
-            })
+            }),
+            'file_name': file_name
         }

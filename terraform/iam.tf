@@ -215,7 +215,7 @@ resource "aws_iam_role_policy" "step_Fn_invoke_lambda_policy" {
         ],
         Resource = [
           aws_lambda_function.extract_s3_object_metadata_lambda.arn,
-          aws_lambda_function.modify_file_size_lambda.arn,
+          aws_lambda_function.generate_image_to_text_lambda.arn,
         ]
       }
     ]
