@@ -38,8 +38,8 @@ def lambda_handler(event, context):
         print(f"Error: {str(e)}")
         return {
             'statusCode': 500,
-            'body': json.dumps({
-                'error': str(e)
-            }),
-            'file_name': file_name
+            'body': {
+                'error': str(e),
+                'file_name': file_name
+            }
         }

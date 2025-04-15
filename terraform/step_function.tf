@@ -120,7 +120,7 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
         },
         "Key": {
           "job_id": {
-            "S.$": "$.file_name"
+            "S.$": "$.body.file_name"
           }
         },
         "TableName": aws_dynamodb_table.image_upload_jobs.name,
@@ -139,7 +139,7 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
         },
         "Key": {
           "job_id": {
-            "S.$": "$.file_name"
+            "S.$": "$.body.file_name"
           }
         },
         "TableName": aws_dynamodb_table.image_upload_jobs.name,
