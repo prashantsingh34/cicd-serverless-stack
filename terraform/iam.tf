@@ -139,7 +139,7 @@ resource "aws_iam_role" "eventbridge_invoke_stepfn_role" {
 
 resource "aws_iam_role_policy" "eventbridge_invoke_stepfn_role_policy" {
   name = "eventbridge-start-stepfn-role-policy"
-  role = aws_iam_role.generate_presigned_url_lambda_role.id
+  role = aws_iam_role.eventbridge_invoke_stepfn_role.id
 
   policy = jsonencode({
     Version = "2012-10-17",
