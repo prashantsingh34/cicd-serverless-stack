@@ -171,3 +171,70 @@ resource "aws_iam_role" "step_fn_exec_role" {
     }]
   })
 }
+
+resource "aws_iam_role_policy" "step_Fn_invoke_lambda_policy" {
+  name = "step_fn_invoke_lambda-role-policy"
+  role = aws_iam_role.step_fn_exec_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+         "states:StartExecution"
+        ],
+        Resource = [
+          aws_lambda_function.extract_s3_object_metadata_lambda.arn,
+          aws_lambda_function.modify_file_size_lambda.arn,
+        ]
+      }
+    ]
+  })
+}
+
+
+resource "aws_iam_role_policy" "step_fn_s3_access" {
+  name = "Step_fn-s3-access"
+  role = aws_iam_role.step_fn_exec_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:PutObject"
+        ],
+        Resource = [
+          "arn:aws:s3:::${aws_s3_bucket.file_to_be_processed.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.file_to_be_processed.bucket}/*",
+          "arn:aws:s3:::${aws_s3_bucket.processed_file_bucket.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.processed_file_bucket.bucket}/*",
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "step_fn_dynamo_put_item" {
+  name = "step_fn-dynamo-put"
+  role = aws_iam_role.step_fn_exec_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+         "dynamodb:PutItem"
+        ],
+        Resource = [
+          aws_dynamodb_table.image_upload_jobs.arn
+        ]
+      }
+    ]
+  })
+}

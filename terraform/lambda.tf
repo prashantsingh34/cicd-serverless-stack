@@ -1,3 +1,10 @@
+data "archive_file" "presigned_url_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../lambda/presigned_url.py"
+  output_path = "/tmp/presigned_url.zip"
+}
+
+
 resource "aws_lambda_function" "generate_presigned_url_lambda" {
 
   function_name    = "presigned_url-lambda"
@@ -19,10 +26,12 @@ resource "aws_lambda_function" "generate_presigned_url_lambda" {
 
 }
 
-data "archive_file" "presigned_url_zip" {
+
+
+data "archive_file" "extract_s3_object_metadata_zip" {
   type        = "zip"
-  source_file = "${path.module}/../lambda/presigned_url.py"
-  output_path = "/tmp/presigned_url.zip"
+  source_file = "${path.module}/../lambda/extract_s3_object_metadata.py"
+  output_path = "/tmp/extract_s3_object_metadata.zip"
 }
 
 resource "aws_lambda_function" "extract_s3_object_metadata_lambda" {
@@ -45,13 +54,36 @@ resource "aws_lambda_function" "extract_s3_object_metadata_lambda" {
 
 }
 
-data "archive_file" "extract_s3_object_metadata_zip" {
+
+
+
+data "archive_file" "modify_file_size_zip" {
   type        = "zip"
-  source_file = "${path.module}/../lambda/extract_s3_object_metadata.py"
-  output_path = "/tmp/extract_s3_object_metadata.zip"
+  source_file = "${path.module}/../lambda/modify_file_size.py"
+  output_path = "/tmp/modify_file_size.zip"
 }
 
 
+resource "aws_lambda_function" "modify_file_size_lambda" {
+
+  function_name    = "modify_file_size"
+  role             = aws_iam_role.generate_presigned_url_lambda_role.arn
+  handler          = "modify_file_size.lambda_handler"
+  runtime          = "python3.11"
+  timeout          = 30
+  memory_size      = 128
+  layers           = [aws_lambda_layer_version.python_deps_layer.arn]
+  filename         = data.archive_file.modify_file_size_zip.output_path
+  source_code_hash = data.archive_file.modify_file_size_zip.output_base64sha256
+  environment {
+    variables = {
+      SOURCE_BUCKET = aws_s3_bucket.file_to_be_processed.bucket,
+      DEST_BUCKET= aws_s3_bucket.processed_file_bucket.bucket,
+    }
+  }
+
+
+}
 
 
 
