@@ -39,6 +39,7 @@ resource "aws_cloudwatch_log_group" "eventbridge_logs" {
 resource "aws_cloudwatch_event_target" "log_target" {
   rule      = aws_cloudwatch_event_rule.s3_object_created.name
   target_id = "LogTarget"
+  event_bus_name = aws_cloudwatch_event_bus.file_transfer_event_bus.name
   role_arn  = aws_iam_role.eventbridge_to_logs_role.arn
   arn       = aws_cloudwatch_log_group.eventbridge_logs.arn
 }
