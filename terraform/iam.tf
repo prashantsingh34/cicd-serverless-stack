@@ -182,7 +182,7 @@ resource "aws_iam_role_policy" "step_Fn_invoke_lambda_policy" {
       {
         Effect = "Allow",
         Action = [
-         "states:StartExecution"
+         "lambda:InvokeFunction"
         ],
         Resource = [
           aws_lambda_function.extract_s3_object_metadata_lambda.arn,
@@ -229,7 +229,7 @@ resource "aws_iam_role_policy" "step_fn_dynamo_put_item" {
       {
         Effect = "Allow",
         Action = [
-         "dynamodb:PutItem"
+         "dynamodb:UpdateItem"
         ],
         Resource = [
           aws_dynamodb_table.image_upload_jobs.arn

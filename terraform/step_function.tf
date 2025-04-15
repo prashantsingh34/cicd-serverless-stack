@@ -6,146 +6,75 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
   "Comment": "Triggered by S3 events",
   "StartAt": "Get File metadata",
   "States": {
-    "Get File metadata": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::lambda:invoke",
-      "OutputPath": "$.Payload",
-      "Parameters": {
-        "Payload.$": "$",
-        "FunctionName": aws_lambda_function.extract_s3_object_metadata_lambda.arn
-      },
-      "Retry": [
-        {
-          "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "Lambda.TooManyRequestsException"
-          ],
-          "IntervalSeconds": 1,
-          "MaxAttempts": 3,
-          "BackoffRate": 2,
-          "JitterStrategy": "FULL"
-        }
-      ],
-      "Next": "Choice"
-    },
-    "Choice": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Next": "UpdateItem file trsanfer failed",
-          "Variable": "$.statusCode",
-          "NumericEquals": 500
-        }
-      ],
-      "Default": "Check File type"
-    },
-    "UpdateItem file trsanfer failed": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::dynamodb:updateItem",
-      "Parameters": {
-        "TableName": "MyDynamoDBTable",
-        "Key": {
-          "Column": {
-            "S": "MyEntry"
-          }
-        },
-        "UpdateExpression": "SET MyKey = :myValueRef",
-        "ExpressionAttributeValues": {
-          ":myValueRef": {
-            "S": "MyValue"
-          }
-        }
-      },
-      "End": true
-    },
     "Check File type": {
-      "Type": "Choice",
       "Choices": [
         {
+          "Next": "UpdateItem incorrect extension",
           "Not": {
-            "Variable": "$.file.type",
-            "StringEquals": "png"
-          },
-          "Next": "Pass-> can't modify file"
+            "Variable": "$.body.file_extension",
+            "StringEquals": ".png"
+          }
         }
       ],
-      "Default": "Check file size"
-    },
-    "Pass-> can't modify file": {
-      "Type": "Pass",
-      "Next": "UpdateItem incorrect extension"
-    },
-    "UpdateItem incorrect extension": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::dynamodb:updateItem",
-      "Parameters": {
-        "TableName": "MyDynamoDBTable",
-        "Key": {
-          "Column": {
-            "S": "MyEntry"
-          }
-        },
-        "UpdateExpression": "SET MyKey = :myValueRef",
-        "ExpressionAttributeValues": {
-          ":myValueRef": {
-            "S": "MyValue"
-          }
-        }
-      },
-      "End": true
+      "Default": "Check file size",
+      "Type": "Choice"
     },
     "Check file size": {
-      "Type": "Choice",
       "Choices": [
         {
           "Next": "Modify File and upload to s3",
-          "Variable": "$.file.size",
+          "Variable": "$.body.file_size",
           "NumericGreaterThan": 50
         }
       ],
-      "Default": "CopyObject-> No modification reqd"
+      "Default": "CopyObject-> No modification reqd",
+      "Type": "Choice"
+    },
+    "Check statusCode": {
+      "Choices": [
+        {
+          "Next": "UpdateItem file trsansfer failed",
+          "Not": {
+            "NumericEquals": 200,
+            "Variable": "$.modifyFile.statusCode"
+          }
+        }
+      ],
+      "Default": "UpdateItem File transfer successfull",
+      "Type": "Choice"
+    },
+    "Choice": {
+      "Choices": [
+        {
+          "Next": "UpdateItem file trsanfer failed",
+          "NumericEquals": 500,
+          "Variable": "$.statusCode"
+        }
+      ],
+      "Default": "Check File type",
+      "Type": "Choice"
     },
     "CopyObject-> No modification reqd": {
-      "Type": "Task",
+      "Next": "UpdateItem File transfer successfull",
       "Parameters": {
         "Bucket": "MyData",
         "CopySource": "MyData",
         "Key": "MyData"
       },
       "Resource": "arn:aws:states:::aws-sdk:s3:copyObject",
-      "Next": "UpdateItem File transfer successfull"
+      "Type": "Task"
     },
-    "UpdateItem File transfer successfull": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::dynamodb:updateItem",
-      "Parameters": {
-        "TableName": "MyDynamoDBTable",
-        "Key": {
-          "Column": {
-            "S": "MyEntry"
-          }
-        },
-        "UpdateExpression": "SET MyKey = :myValueRef",
-        "ExpressionAttributeValues": {
-          ":myValueRef": {
-            "S": "MyValue"
-          }
-        }
-      },
-      "End": true
-    },
-    "Modify File and upload to s3": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::lambda:invoke",
+    "Get File metadata": {
+      "Next": "Choice",
       "OutputPath": "$.Payload",
       "Parameters": {
-        "Payload.$": "$",
-        "FunctionName": aws_lambda_function.modify_file_size_lambda.arn
+        "FunctionName": aws_lambda_function.extract_s3_object_metadata_lambda.arn,
+        "Payload.$": "$"
       },
+      "Resource": "arn:aws:states:::lambda:invoke",
       "Retry": [
         {
+          "BackoffRate": 2,
           "ErrorEquals": [
             "Lambda.ServiceException",
             "Lambda.AWSLambdaException",
@@ -153,44 +82,111 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
             "Lambda.TooManyRequestsException"
           ],
           "IntervalSeconds": 1,
-          "MaxAttempts": 3,
-          "BackoffRate": 2,
-          "JitterStrategy": "FULL"
+          "JitterStrategy": "FULL",
+          "MaxAttempts": 3
         }
       ],
-      "Next": "Check statusCode"
+      "Type": "Task"
     },
-    "Check statusCode": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Next": "UpdateItem file trsansfer failed",
-          "Not": {
-            "Variable": "$.modifyFile.statusCode",
-            "NumericEquals": 200
-          }
-        }
-      ],
-      "Default": "UpdateItem File transfer successfull"
-    },
-    "UpdateItem file trsansfer failed": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::dynamodb:updateItem",
+    "Modify File and upload to s3": {
+      "Next": "Check statusCode",
+      "OutputPath": "$.Payload",
       "Parameters": {
-        "TableName": "MyDynamoDBTable",
-        "Key": {
-          "Column": {
-            "S": "MyEntry"
-          }
-        },
-        "UpdateExpression": "SET MyKey = :myValueRef",
+        "FunctionName": aws_lambda_function.modify_file_size_lambda.arn
+        "Payload.$": "$"
+      },
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Retry": [
+        {
+          "BackoffRate": 2,
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "JitterStrategy": "FULL",
+          "MaxAttempts": 3
+        }
+      ],
+      "Type": "Task"
+    },
+    "UpdateItem File transfer successfull": {
+      "End": true,
+      "Parameters": {
         "ExpressionAttributeValues": {
           ":myValueRef": {
-            "S": "MyValue"
+            "S": "success"
           }
-        }
+        },
+        "Key": {
+          "job_id": {
+            "S.$": "$.body.file_name"
+          }
+        },
+        "TableName": aws_dynamodb_table.image_upload_jobs.name,
+        "UpdateExpression": "SET job_status = :myValueRef"
       },
-      "End": true
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Type": "Task"
+    },
+    "UpdateItem file trsanfer failed": {
+      "End": true,
+      "Parameters": {
+        "ExpressionAttributeValues": {
+          ":myValueRef": {
+            "S": "Error while getting metadata of file"
+          }
+        },
+        "Key": {
+          "job_id": {
+            "S.$": "$.file_name"
+          }
+        },
+        "TableName": aws_dynamodb_table.image_upload_jobs.name,
+        "UpdateExpression": "SET job_status = :myValueRef"
+      },
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Type": "Task"
+    },
+    "UpdateItem file trsansfer failed": {
+      "End": true,
+      "Parameters": {
+        "ExpressionAttributeValues": {
+          ":myValueRef": {
+            "S": "Error while modifying file size"
+          }
+        },
+        "Key": {
+          "job_id": {
+            "S.$": "$.body.file_name"
+          }
+        },
+        "TableName": aws_dynamodb_table.image_upload_jobs.name,
+        "UpdateExpression": "SET job_status = :myValueRef"
+      },
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Type": "Task"
+    },
+    "UpdateItem incorrect extension": {
+      "End": true,
+      "Parameters": {
+        "ExpressionAttributeValues": {
+          ":myValueRef": {
+            "S": "Incorrect File Extension"
+          }
+        },
+        "Key": {
+          "job_id": {
+            "S.$": "$.body.file_name"
+          }
+        },
+        "TableName": aws_dynamodb_table.image_upload_jobs.name,
+        "UpdateExpression": "SET job_status = :myValueRef"
+      },
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Type": "Task"
     }
   }
 })
