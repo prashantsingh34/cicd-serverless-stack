@@ -19,6 +19,73 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
       "Default": "Text from image",
       "Type": "Choice"
     },
+    "Check Status Code": {
+      "Choices": [
+        {
+          "Next": "UpdateItem for generating OCR text failed",
+          "Not": {
+            "NumericEquals": 200,
+            "Variable": "$.statusCode"
+          }
+        }
+      ],
+      "Default": "UpdateItem for generating OCR text successfull",
+      "Type": "Choice"
+    },
+    "Choice": {
+      "Choices": [
+        {
+          "Next": "UpdateItem for getting metadata failed",
+          "NumericEquals": 500,
+          "Variable": "$.statusCode"
+        }
+      ],
+      "Default": "Check File type",
+      "Type": "Choice"
+    },
+    "UpdateItem for getting metadata failed": {
+      "End": true,
+      "Parameters": {
+        "ExpressionAttributeValues": {
+          ":myValueRef": {
+            "S": "Error while getting file metadata OCR"
+          }
+        },
+        "Key": {
+          "job_id": {
+            "S.$": "$.body.file_name"
+          }
+        },
+        "TableName": aws_dynamodb_table.image_upload_jobs.name,
+        "UpdateExpression": "SET job_status = :myValueRef"
+      },
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Type": "Task"
+    },
+    "Get File metadata": {
+      "Next": "Choice",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": aws_lambda_function.extract_s3_object_metadata_lambda.arn,
+        "Payload.$": "$"
+      },
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Retry": [
+        {
+          "BackoffRate": 2,
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "JitterStrategy": "FULL",
+          "MaxAttempts": 3
+        }
+      ],
+      "Type": "Task"
+    },
     "Text from image": {
       "Next": "Check Status Code",
       "OutputPath": "$.Payload",
@@ -43,52 +110,23 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
       ],
       "Type": "Task"
     },
-    "Check Status Code": {
-      "Choices": [
-        {
-          "Next": "UpdateItem for generating OCR text failed",
-          "Not": {
-            "Variable": "$.statusCode",
-            "NumericEquals": 200
-          }
-        }
-      ],
-      "Default": "UpdateItem for generating OCR text successfull",
-      "Type": "Choice"
-    },
-    "Choice": {
-      "Choices": [
-        {
-          "Next": "UpdateItem for generating OCR text failed",
-          "NumericEquals": 500,
-          "Variable": "$.statusCode"
-        }
-      ],
-      "Default": "Check File type",
-      "Type": "Choice"
-    },
-    "Get File metadata": {
-      "Next": "Choice",
-      "OutputPath": "$.Payload",
+    "UpdateItem for generating OCR text failed": {
+      "End": true,
       "Parameters": {
-        "FunctionName": aws_lambda_function.extract_s3_object_metadata_lambda.arn
-        "Payload.$": "$"
+        "ExpressionAttributeValues": {
+          ":myValueRef": {
+            "S": "Error while generating OCR"
+          }
+        },
+        "Key": {
+          "job_id": {
+            "S.$": "$.body.file_name"
+          }
+        },
+        "TableName": aws_dynamodb_table.image_upload_jobs.name,
+        "UpdateExpression": "SET job_status = :myValueRef"
       },
-      "Resource": "arn:aws:states:::lambda:invoke",
-      "Retry": [
-        {
-          "BackoffRate": 2,
-          "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "Lambda.TooManyRequestsException"
-          ],
-          "IntervalSeconds": 1,
-          "JitterStrategy": "FULL",
-          "MaxAttempts": 3
-        }
-      ],
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
       "Type": "Task"
     },
     "UpdateItem for generating OCR text successfull": {
@@ -97,44 +135,6 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
         "ExpressionAttributeValues": {
           ":myValueRef": {
             "S": "success"
-          }
-        },
-        "Key": {
-          "job_id": {
-            "S.$": "$.body.file_name"
-          }
-        },
-        "TableName": aws_dynamodb_table.image_upload_jobs.name,
-        "UpdateExpression": "SET job_status = :myValueRef"
-      },
-      "Resource": "arn:aws:states:::dynamodb:updateItem",
-      "Type": "Task"
-    },
-    "UpdateItem for generating OCR text failed": {
-      "End": true,
-      "Parameters": {
-        "ExpressionAttributeValues": {
-          ":myValueRef": {
-            "S": "Error while getting metadata of file"
-          }
-        },
-        "Key": {
-          "job_id": {
-            "S.$": "$.body.file_name"
-          }
-        },
-        "TableName": aws_dynamodb_table.image_upload_jobs.name,
-        "UpdateExpression": "SET job_status = :myValueRef"
-      },
-      "Resource": "arn:aws:states:::dynamodb:updateItem",
-      "Type": "Task"
-    },
-    "UpdateItem for generating OCR text failed": {
-      "End": true,
-      "Parameters": {
-        "ExpressionAttributeValues": {
-          ":myValueRef": {
-            "S": "Error while generating OCR"
           }
         },
         "Key": {
