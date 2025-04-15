@@ -16,10 +16,10 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
           }
         }
       ],
-      "Default": "Modify File and upload to s3",
+      "Default": "Text from image",
       "Type": "Choice"
     },
-    "Modify File and upload to s3": {
+    "Text from image": {
       "Next": "Check Status Code",
       "OutputPath": "$.Payload",
       "Parameters": {
@@ -71,7 +71,7 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
       "Next": "Choice",
       "OutputPath": "$.Payload",
       "Parameters": {
-        "FunctionName": aws_lambda_function.modify_file_size_lambda.arn
+        "FunctionName": aws_lambda_function.extract_s3_object_metadata_lambda.arn
         "Payload.$": "$"
       },
       "Resource": "arn:aws:states:::lambda:invoke",
@@ -110,7 +110,7 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
       "Resource": "arn:aws:states:::dynamodb:updateItem",
       "Type": "Task"
     },
-    "UpdateItem file trsanfer failed": {
+    "UpdateItem file transfer failed": {
       "End": true,
       "Parameters": {
         "ExpressionAttributeValues": {
