@@ -29,3 +29,50 @@ resource "aws_cloudwatch_event_target" "start_step_function" {
   role_arn  = aws_iam_role.eventbridge_invoke_stepfn_role.arn
   depends_on=[aws_cloudwatch_event_bus.file_transfer_event_bus]
 }
+
+
+
+resource "aws_cloudwatch_log_group" "eventbridge_logs" {
+  name = "/aws/events/s3-debug"
+}
+
+resource "aws_cloudwatch_event_target" "log_target" {
+  rule      = aws_cloudwatch_event_rule.s3_object_created.name
+  target_id = "LogTarget"
+  role_arn  = aws_iam_role.eventbridge_to_logs_role.arn
+  arn       = aws_cloudwatch_log_group.eventbridge_logs.arn
+}
+
+resource "aws_iam_role" "eventbridge_to_logs_role" {
+  name = "eventbridge-to-logs-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "events.amazonaws.com"
+      },
+      Action: "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "eventbridge_to_logs_policy" {
+  name = "eventbridge-to-logs-policy"
+  role = aws_iam_role.eventbridge_to_logs_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:PutLogEvents",
+          "logs:CreateLogStream"
+        ],
+        Resource = "${aws_cloudwatch_log_group.eventbridge_logs.arn}:*"
+      }
+    ]
+  })
+}
