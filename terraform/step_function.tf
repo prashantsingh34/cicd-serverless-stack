@@ -59,7 +59,7 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
     "Choice": {
       "Choices": [
         {
-          "Next": "UpdateItem file trsanfer failed",
+          "Next": "UpdateItem file transfer failed",
           "NumericEquals": 500,
           "Variable": "$.statusCode"
         }
