@@ -46,20 +46,20 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
     "Check Status Code": {
       "Choices": [
         {
-          "Next": "UpdateItem file transfer failed",
+          "Next": "UpdateItem for generating OCR text failed",
           "Not": {
             "Variable": "$.statusCode",
             "NumericEquals": 200
           }
         }
       ],
-      "Default": "UpdateItem File transfer successfull",
+      "Default": "UpdateItem for generating OCR text successfull",
       "Type": "Choice"
     },
     "Choice": {
       "Choices": [
         {
-          "Next": "UpdateItem file transfer failed",
+          "Next": "UpdateItem for generating OCR text failed",
           "NumericEquals": 500,
           "Variable": "$.statusCode"
         }
@@ -91,7 +91,7 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
       ],
       "Type": "Task"
     },
-    "UpdateItem File transfer successfull": {
+    "UpdateItem for generating OCR text successfull": {
       "End": true,
       "Parameters": {
         "ExpressionAttributeValues": {
@@ -110,7 +110,7 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
       "Resource": "arn:aws:states:::dynamodb:updateItem",
       "Type": "Task"
     },
-    "UpdateItem file transfer failed": {
+    "UpdateItem for generating OCR text failed": {
       "End": true,
       "Parameters": {
         "ExpressionAttributeValues": {
@@ -129,12 +129,12 @@ resource "aws_sfn_state_machine" "s3_event_triggered" {
       "Resource": "arn:aws:states:::dynamodb:updateItem",
       "Type": "Task"
     },
-    "UpdateItem file transfer failed": {
+    "UpdateItem for generating OCR text failed": {
       "End": true,
       "Parameters": {
         "ExpressionAttributeValues": {
           ":myValueRef": {
-            "S": "Error while modifying file size"
+            "S": "Error while generating OCR"
           }
         },
         "Key": {
