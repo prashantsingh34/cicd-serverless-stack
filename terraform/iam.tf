@@ -56,7 +56,9 @@ resource "aws_iam_role_policy" "generate_presigned_url_lambda_s3_access" {
         ],
         Resource = [
           "arn:aws:s3:::${aws_s3_bucket.file_to_be_processed.bucket}",
-          "arn:aws:s3:::${aws_s3_bucket.file_to_be_processed.bucket}/*"
+          "arn:aws:s3:::${aws_s3_bucket.file_to_be_processed.bucket}/*",
+          "arn:aws:s3:::${aws_s3_bucket.processed_file_bucket.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.processed_file_bucket.bucket}/*",
         ]
       }
     ]
