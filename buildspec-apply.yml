@@ -1,6 +1,11 @@
 version: 0.2
 
 phases:
+  pre_build:
+    commands:
+      - echo "Restoring lambda zip files to /tmp..."
+      - mkdir -p /tmp
+      - cp terraform/zipped_lambda/*.zip /tmp/
   build:
     commands:
       - cd terraform
