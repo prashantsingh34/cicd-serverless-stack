@@ -27,5 +27,6 @@ artifacts:
     - terraform/tfplan
     - terraform/*.tf
     - buildspec-apply.yml
-    - terraform/zipped_lambda/*
+    - terraform/zipped_lambda/**
+
 
