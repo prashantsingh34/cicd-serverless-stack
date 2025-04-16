@@ -1,0 +1,11 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - cd terraform
+      - terraform init
+      - terraform apply -auto-approve tfplan
+  post_build:
+    commands:
+      - echo "Terraform apply completed!"

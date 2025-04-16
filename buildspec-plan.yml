@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - pip install -r requirements.txt -t python
+      - zip -q -r terraform/layer.zip python
+      - rm -rf python
+
+  build:
+    commands:
+      - cd terraform
+      - terraform init
+      - terraform plan -out=tfplan
+  post_build:
+    commands:
+      - echo "Terraform plan completed!"
+
+artifacts:
+  files:
+    - terraform/layer.zip
+    - terraform/tfplan
+    - terraform/*.tf
+
