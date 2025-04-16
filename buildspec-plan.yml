@@ -17,6 +17,9 @@ phases:
   post_build:
     commands:
       - echo "Terraform plan completed!"
+      - mkdir -p terraform/zipped_lambda
+      - mv /tmp/*.zip terraform/zipped_lambda/
+
 
 artifacts:
   files:
@@ -24,4 +27,5 @@ artifacts:
     - terraform/tfplan
     - terraform/*.tf
     - buildspec-apply.yml
+    - terraform/zipped_lambda/*
 
