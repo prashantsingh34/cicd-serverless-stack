@@ -23,4 +23,5 @@ artifacts:
     - terraform/layer.zip
     - terraform/tfplan
     - terraform/*.tf
+    - buildspec-apply.yml
 
