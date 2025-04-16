@@ -17,8 +17,8 @@ phases:
   post_build:
     commands:
       - echo "Terraform plan completed!"
-      - mkdir -p terraform/zipped_lambda
-      - mv /tmp/*.zip terraform/zipped_lambda/
+      - mkdir  zipped_lambda
+      - mv /tmp/*.zip zipped_lambda/
 
 
 artifacts:
